@@ -3,7 +3,10 @@ uuid='7fccc9cf-9b71-44f6-800b-f9457fd64335'
 
 # wget --mirror --adjust-extension --convert-links --page-requisites "https://archive.cnx.org/contents/${uuid}.html"
 
-book_toc="./archive.cnx.org/contents/${uuid}.html"
+content_root="./archive.cnx.org/contents"
+book_toc="${content_root}/${uuid}.html"
+epub_toc="${content_root}/toc.xhtml"
+
 echo "Root file is ${book_toc}"
 echo "Building ./META-INF/container.xml"
 
@@ -32,11 +35,12 @@ echo '<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/
   <manifest>' > ./thebook.opf
 
 # Add the ToC
-echo "<item properties=\"nav\" id=\"nav\" href=\"${book_toc}\" media-type=\"application/xhtml+xml\" />" >> ./thebook.opf
+xsltproc clean_toc.xsl "${book_toc}" | xmllint --pretty 1 - > "${epub_toc}"
+echo "  <item properties=\"nav\" id=\"nav\" href=\"${epub_toc}\" media-type=\"application/xhtml+xml\" />" >> ./thebook.opf
 
 # Add the cover image
 echo "Adding cover image"
-echo '<item properties="cover-image" id="ci" href="cover.svg" media-type="image/svg+xml" />' >> ./thebook.opf
+echo '  <item properties="cover-image" id="ci" href="cover.svg" media-type="image/svg+xml" />' >> ./thebook.opf
 echo '<svg width="256" height="256" class="rocket" viewBox="0 0 16 16" version="1.1" aria-hidden="true"><path fill-rule="evenodd" d="M12.17 3.83c-.27-.27-.47-.55-.63-.88-.16-.31-.27-.66-.34-1.02-.58.33-1.16.7-1.73 1.13-.58.44-1.14.94-1.69 1.48-.7.7-1.33 1.81-1.78 2.45H3L0 10h3l2-2c-.34.77-1.02 2.98-1 3l1 1c.02.02 2.23-.64 3-1l-2 2v3l3-3v-3c.64-.45 1.75-1.09 2.45-1.78.55-.55 1.05-1.13 1.47-1.7.44-.58.81-1.16 1.14-1.72-.36-.08-.7-.19-1.03-.34a3.39 3.39 0 01-.86-.63zM16 0s-.09.38-.3 1.06c-.2.7-.55 1.58-1.06 2.66-.7-.08-1.27-.33-1.66-.72-.39-.39-.63-.94-.7-1.64C13.36.84 14.23.48 14.92.28 15.62.08 16 0 16 0z"></path></svg>' > ./cover.svg
 
 # Loop through the resources and make sure references to hem are included in the spine
@@ -45,16 +49,16 @@ for resource_path in $(find ./archive.cnx.org/resources); do
   if [[ -f "${resource_path}" ]]; then
     media_type=$(file -b --mime-type "${resource_path}")
     filename=$(basename "${resource_path}")
-    echo "<item id=\"${filename}\" href=\"${resource_path}\" media-type=\"${media_type}\"/>" >> ./thebook.opf
+    echo "  <item id=\"${filename}\" href=\"${resource_path}\" media-type=\"${media_type}\"/>" >> ./thebook.opf
   fi
 done
 
 echo "Adding HTML pages"
-for resource_path in $(find ./archive.cnx.org/contents); do
+for resource_path in $(find ${content_root}); do
   filename=$(basename "${resource_path}")
 
   if [[ "${filename}" != "${uuid}.html" && "${filename: -5}" == ".html" ]]; then
-    echo "<item properties=\"mathml\" id=\"${filename}\" href=\"${resource_path}\" media-type=\"application/xhtml+xml\"/>" >> ./thebook.opf
+    echo "  <item properties=\"mathml\" id=\"${filename}\" href=\"${resource_path}\" media-type=\"application/xhtml+xml\"/>" >> ./thebook.opf
   fi
 done
 
@@ -63,11 +67,10 @@ echo '</manifest>' >> ./thebook.opf
 # Optionally add the spine (not in order)
 echo "Adding spine"
 echo '<spine>' >> ./thebook.opf
-for resource_path in $(find ./archive.cnx.org/contents); do
-  filename=$(basename "${resource_path}")
-  if [[ ${filename} != "${uuid}.html" && ${filename: -5} == ".html" ]]; then
-    echo "<itemref idref=\"${filename}\"/>" >> ./thebook.opf
-  fi
+echo "  <itemref idref=\"nav\"/>" >> ./thebook.opf
+for filename in $(xsltproc get_spine.xsl "${book_toc}" 2>&1); do
+  filename=$(basename "${filename}")
+  echo "  <itemref idref=\"${filename}\"/>" >> ./thebook.opf
 done
 echo '</spine>' >> ./thebook.opf
 

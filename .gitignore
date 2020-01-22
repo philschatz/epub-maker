@@ -3,4 +3,7 @@ META-INF/
 cover.*
 mimetype
 *.opf
-Archive.zip*
+
+epubcheck/
+thebook.zip
+thebook.zip.epub

@@ -16,6 +16,32 @@
   </xsl:copy>
 </xsl:template>
 
+
+<!-- Replace broken chapter-level links with just text -->
+<xsl:template match="h:a[starts-with(@href, 'https:')]">
+  <span xmlns="http://www.w3.org/1999/xhtml">
+    <xsl:apply-templates select="node()"/>
+  </span>
+</xsl:template>
+
+<!-- Replace '/contents/' in the HREF with just './' -->
+<xsl:template match="h:a/@href">
+  <xsl:attribute name="href">
+    <xsl:call-template name="string-replace-all">
+      <xsl:with-param name="text" select="." />
+      <xsl:with-param name="replace" select="'/contents/'" />
+      <xsl:with-param name="by" select="''" />
+    </xsl:call-template>
+  </xsl:attribute>
+</xsl:template>
+
+<!-- Make ToC ol instead of ul -->
+<xsl:template match="h:ul">
+  <ol xmlns="http://www.w3.org/1999/xhtml">
+    <xsl:apply-templates select="@*|node()"/>
+  </ol>
+</xsl:template>
+
 <!-- Remove the HTML markup in the ToC titles -->
 <xsl:template match="h:a/text()">
   <xsl:variable name="r5" select="."/>

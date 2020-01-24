@@ -1,8 +1,5 @@
 #!/bin/bash
-uuid='7fccc9cf-9b71-44f6-800b-f9457fd64335'
-
-# wget --mirror --adjust-extension --convert-links --page-requisites "https://archive.cnx.org/contents/${uuid}.html"
-
+UUID=${UUID:-7fccc9cf-9b71-44f6-800b-f9457fd64335}
 
 replace_colons() {
   filename=$1
@@ -12,7 +9,7 @@ replace_colons() {
 }
 
 content_root="./archive.cnx.org/contents"
-book_toc="${content_root}/${uuid}.html"
+book_toc="${content_root}/${UUID}.html"
 epub_toc="${content_root}/toc.xhtml"
 
 echo "Root file is ${book_toc}"
@@ -67,7 +64,7 @@ for resource_path in $(find ${content_root}); do
   filename=$(basename "${resource_path}")
   filename=$(replace_colons "${filename}")
 
-  if [[ "${filename}" != "${uuid}.html" && "${filename: -5}" == ".html" ]]; then
+  if [[ "${filename}" != "${UUID}.html" && "${filename: -5}" == ".html" ]]; then
     echo "  <item properties=\"mathml\" id=\"id_${filename}\" href=\"${resource_path}\" media-type=\"application/xhtml+xml\"/>" >> ./thebook.opf
   fi
 done

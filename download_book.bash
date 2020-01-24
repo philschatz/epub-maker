@@ -1,7 +1,7 @@
 #!/bin/bash
-uuid='7fccc9cf-9b71-44f6-800b-f9457fd64335'
+UUID=${UUID:-7fccc9cf-9b71-44f6-800b-f9457fd64335}
 
-wget --mirror --adjust-extension --convert-links --page-requisites "https://archive.cnx.org/contents/${uuid}.html"
+wget --mirror --adjust-extension --convert-links --page-requisites "https://archive.cnx.org/contents/${UUID}.html"
 
 echo "Fixing up un-namespaced <math> elements"
 
